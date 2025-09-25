@@ -89,6 +89,16 @@ export function CalendarGenerator({ template, fromMonth, toMonth, year, backgrou
           day: 'hover:bg-transparent text-black',
           today: 'bg-transparent text-black font-bold'
         }
+      case 'pyramid-minimal':
+      case 'pyramid-artistic':
+      case 'pyramid-modern':
+      case 'pyramid-vintage':
+        return {
+          container: 'bg-transparent',
+          header: 'bg-transparent text-black font-bold',
+          day: 'hover:bg-transparent text-black',
+          today: 'bg-transparent text-black font-bold'
+        }
       default:
         return {
           container: 'bg-white border border-black',
@@ -157,7 +167,7 @@ export function CalendarGenerator({ template, fromMonth, toMonth, year, backgrou
 
     return (
       <div id={elementId} className="w-full h-full flex items-center justify-center">
-        <div className="relative w-[600px] h-[600px]">
+        <div className="relative w-[700px] h-[700px]">
           {/* Background image with full opacity - LOWEST LAYER */}
           <div
             className="absolute inset-0 rounded-full pointer-events-none"
@@ -166,17 +176,17 @@ export function CalendarGenerator({ template, fromMonth, toMonth, year, backgrou
               backgroundSize: `${backgroundZoom}%`,
               backgroundPosition: 'center',
               backgroundRepeat: 'no-repeat',
-              clipPath: 'circle(290px at center)'
+              clipPath: 'circle(340px at center)'
             }}
           />
 
           {/* SVG for pie slices - MIDDLE LAYER */}
-          <svg className="w-full h-full transform -rotate-90 relative z-10" viewBox="0 0 600 600">
+          <svg className="w-full h-full transform -rotate-90 relative z-10" viewBox="0 0 700 700">
             {/* Background circle */}
             <circle
-              cx="300"
-              cy="300"
-              r="290"
+              cx="350"
+              cy="350"
+              r="340"
               fill="none"
               stroke="#e5e7eb"
               strokeWidth="3"
@@ -198,9 +208,9 @@ export function CalendarGenerator({ template, fromMonth, toMonth, year, backgrou
               const endRad = (endAngle * Math.PI) / 180
 
               // Calculate path coordinates
-              const centerX = 300
-              const centerY = 300
-              const outerRadius = 290
+              const centerX = 350
+              const centerY = 350
+              const outerRadius = 340
               const innerRadius = 0
 
               const x1 = centerX + Math.cos(startRad) * innerRadius
@@ -243,12 +253,12 @@ export function CalendarGenerator({ template, fromMonth, toMonth, year, backgrou
 
                   {/* Day number - positioned on outer edge */}
                   <text
-                    x={centerX + Math.cos((startRad + endRad) / 2) * (outerRadius - 20)}
-                    y={centerY + Math.sin((startRad + endRad) / 2) * (outerRadius - 20)}
+                    x={centerX + Math.cos((startRad + endRad) / 2) * (outerRadius - 25)}
+                    y={centerY + Math.sin((startRad + endRad) / 2) * (outerRadius - 25)}
                     textAnchor="middle"
                     dominantBaseline="middle"
                     className="fill-black text-sm font-bold pointer-events-none drop-shadow-lg"
-                    transform={`rotate(90 ${centerX + Math.cos((startRad + endRad) / 2) * (outerRadius - 20)} ${centerY + Math.sin((startRad + endRad) / 2) * (outerRadius - 20)})`}
+                    transform={`rotate(90 ${centerX + Math.cos((startRad + endRad) / 2) * (outerRadius - 25)} ${centerY + Math.sin((startRad + endRad) / 2) * (outerRadius - 25)})`}
                   >
                     {day.getDate()}
                   </text>
@@ -259,7 +269,7 @@ export function CalendarGenerator({ template, fromMonth, toMonth, year, backgrou
 
           {/* Center content - TOP LAYER with semi-transparent background */}
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
-            <div className="text-center bg-white/70 backdrop-blur-sm rounded-full w-24 h-24 flex flex-col items-center justify-center shadow-lg">
+            <div className="text-center bg-white/70 backdrop-blur-sm rounded-full w-28 h-28 flex flex-col items-center justify-center shadow-lg">
               <h3 className="text-lg font-bold text-gray-800">
                 {format(new Date(year, currentViewMonth), 'MMM')}
               </h3>
@@ -267,6 +277,133 @@ export function CalendarGenerator({ template, fromMonth, toMonth, year, backgrou
             </div>
           </div>
 
+        </div>
+      </div>
+    )
+  }
+
+  // Pyramid template layout - Triangular Calendar
+  if (template === 'pyramid-minimal' || template === 'pyramid-artistic' || 
+      template === 'pyramid-modern' || template === 'pyramid-vintage') {
+    // Filter out null days and get only actual dates
+    const actualDays = calendarData.days.filter(day => day !== null)
+    const totalDays = actualDays.length
+
+    // Create pyramid rows - we'll arrange days in a triangular pattern
+    const pyramidRows = []
+    let dayIndex = 0
+    
+    // Calculate how many rows we need for a pyramid
+    // For 28-31 days, we'll use 7-8 rows with varying widths
+    const maxRowWidth = Math.ceil(Math.sqrt(totalDays * 2)) // Approximate base width
+    
+    for (let row = 0; row < maxRowWidth && dayIndex < totalDays; row++) {
+      const daysInThisRow = Math.min(row + 1, totalDays - dayIndex)
+      const rowDays = actualDays.slice(dayIndex, dayIndex + daysInThisRow)
+      pyramidRows.push(rowDays)
+      dayIndex += daysInThisRow
+    }
+
+    return (
+      <div id={elementId} className="w-full h-full flex items-center justify-center">
+        <div className="relative w-[600px] h-[600px]">
+          {/* Background image with triangular clip */}
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              backgroundImage: backgroundImage ? `url(${backgroundImage})` : 'url(/default/default_no_color.jpg)',
+              backgroundSize: `${backgroundZoom}%`,
+              backgroundPosition: 'center',
+              backgroundRepeat: 'no-repeat',
+              clipPath: 'polygon(50% 5%, 5% 98%, 95% 98%)'
+            }}
+          />
+
+          {/* Pyramid structure */}
+          <div className="absolute inset-0 flex flex-col items-center justify-center space-y-2 z-10">
+            {/* Pyramid rows */}
+            {pyramidRows.map((rowDays, rowIndex) => (
+              <div key={rowIndex} className="flex" style={{
+                marginTop: rowIndex === 0 ? '20px' : '0px'
+              }}>
+                {rowDays.map((day, dayIndex) => {
+                  return (
+                    <div
+                      key={day.toISOString()}
+                      className={`
+                        w-[72px] h-[72px] 
+                        relative
+                        cursor-pointer 
+                        transition-all duration-200 
+                        transform hover:scale-105
+                      `}
+                      style={{
+                        marginLeft: dayIndex > 0 ? '-2px' : '0px'
+                      }}
+                      onClick={() => {
+                        console.log(`Clicked pyramid day ${day.getDate()}`)
+                      }}
+                    >
+                      <svg 
+                        className="w-full h-full absolute inset-0" 
+                        viewBox="0 0 72 72"
+                      >
+                        {/* Triangle fill */}
+                        <polygon
+                          points="36,3 3,68 68,68"
+                          fill="rgba(255, 255, 255, 0.2)"
+                          className="hover:fill-white/40 transition-all duration-200"
+                        />
+                        {/* Triangle border */}
+                        <polygon
+                          points="36,3 3,68 68,68"
+                          fill="none"
+                          stroke="black"
+                          strokeWidth="2"
+                        />
+                      </svg>
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <span className="text-sm font-bold text-black drop-shadow-sm">
+                          {day.getDate()}
+                        </span>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            ))}
+
+          </div>
+
+          {/* Decorative border */}
+          <div 
+            className="absolute inset-0 pointer-events-none border-4 border-amber-600"
+            style={{
+              clipPath: 'polygon(50% 5%, 5% 98%, 95% 98%)'
+            }}
+          />
+
+          {/* Month/Year display at the bottom - touching triangle base */}
+          <div className="absolute left-1/2 transform -translate-x-1/2" style={{ top: '100%' }}>
+            <div 
+              className={`text-center border-2 ${
+                template === 'pyramid-minimal' ? 'bg-black text-white border-black' :
+                template === 'pyramid-artistic' ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white border-purple-600' :
+                template === 'pyramid-modern' ? 'bg-gray-800 text-gray-100 border-gray-700' :
+                template === 'pyramid-vintage' ? 'bg-amber-200 text-amber-900 border-amber-400' :
+                'bg-black text-white border-black' // fallback
+              }`}
+              style={{
+                width: '540px', // Matches the triangle base width (90% of 600px container)
+              }}
+            >
+              <h3 className={`text-xl ${
+                template === 'pyramid-vintage' ? 'font-serif font-bold' : 'font-bold'
+              }`}>
+                {format(new Date(year, currentViewMonth), 'MMMM yyyy')}
+              </h3>
+            </div>
+          </div>
         </div>
       </div>
     )

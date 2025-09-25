@@ -464,7 +464,7 @@ export default function Home() {
             </div>
 
             {/* Sunflower Template */}
-            <div>
+            <div className="mb-4">
               <button
                 onClick={() => setSelectedTemplate('sunflower')}
                 className={`w-full p-3 rounded-lg border-2 transition-all text-left ${
@@ -476,6 +476,46 @@ export default function Home() {
                 <div className="text-sm font-medium text-gray-700">Sunflower</div>
                 <div className="text-xs text-gray-500 mt-1">Sunflower shape with dates embedded</div>
               </button>
+            </div>
+
+            {/* Pyramid Template */}
+            <div>
+              <button
+                onClick={() => setSelectedTemplate('pyramid-minimal')}
+                className={`w-full p-3 rounded-lg border-2 transition-all text-left mb-3 ${
+                  ['pyramid-minimal', 'pyramid-artistic', 'pyramid-modern', 'pyramid-vintage'].includes(selectedTemplate)
+                    ? 'border-purple-500 bg-purple-50'
+                    : 'border-gray-200 hover:border-gray-300'
+                }`}
+              >
+                <div className="text-sm font-medium text-gray-700">Pyramid</div>
+                <div className="text-xs text-gray-500 mt-1">Triangular pyramid layout</div>
+              </button>
+              
+              {/* Color Themes for Pyramid Template */}
+              {['pyramid-minimal', 'pyramid-artistic', 'pyramid-modern', 'pyramid-vintage'].includes(selectedTemplate) && (
+                <div className="ml-4 space-y-2">
+                  <div className="text-xs font-medium text-gray-600 mb-2">Color Themes:</div>
+                  {[
+                    { id: 'pyramid-minimal', name: 'Minimal' },
+                    { id: 'pyramid-artistic', name: 'Artistic' },
+                    { id: 'pyramid-modern', name: 'Modern' },
+                    { id: 'pyramid-vintage', name: 'Vintage' },
+                  ].map((theme) => (
+                    <button
+                      key={theme.id}
+                      onClick={() => setSelectedTemplate(theme.id)}
+                      className={`w-full p-2 rounded border text-left text-sm ${
+                        selectedTemplate === theme.id
+                          ? 'border-purple-400 bg-purple-100 text-purple-700'
+                          : 'border-gray-200 hover:border-gray-300 text-gray-600'
+                      }`}
+                    >
+                      {theme.name}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
