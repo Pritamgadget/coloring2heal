@@ -205,7 +205,8 @@ export default function Home() {
             <div>
               <h3 className="text-lg font-semibold text-gray-900 mb-3">Date Range</h3>
               <div className="space-y-2">
-                <div className="grid grid-cols-1 gap-2">
+                {/* From and To months on same line */}
+                <div className="grid grid-cols-2 gap-2">
                   <div>
                     <label className="block text-xs font-medium text-gray-600 mb-1">From</label>
                     <select
@@ -232,47 +233,21 @@ export default function Home() {
                       ))}
                     </select>
                   </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Year</label>
-                    <select
-                      value={selectedYear}
-                      onChange={(e) => setSelectedYear(Number(e.target.value))}
-                      className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm text-gray-900 bg-white"
-                    >
-                      {Array.from({ length: 10 }, (_, i) => new Date().getFullYear() + i - 5).map(year => (
-                        <option key={year} value={year}>{year}</option>
-                      ))}
-                    </select>
-                  </div>
+                </div>
+                {/* Year on separate line */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Year</label>
+                  <select
+                    value={selectedYear}
+                    onChange={(e) => setSelectedYear(Number(e.target.value))}
+                    className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm text-gray-900 bg-white"
+                  >
+                    {Array.from({ length: 10 }, (_, i) => new Date().getFullYear() + i - 5).map(year => (
+                      <option key={year} value={year}>{year}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
-            </div>
-
-            {/* Export Controls */}
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-3">Export</h3>
-              <button
-                onClick={handleDownload}
-                disabled={isDownloading}
-                className="w-full px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center justify-center gap-2 text-sm disabled:bg-gray-400 disabled:cursor-not-allowed"
-              >
-                {isDownloading ? (
-                  <>
-                    <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Downloading...
-                  </>
-                ) : (
-                  <>
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                    Download
-                  </>
-                )}
-              </button>
             </div>
 
             {/* Background Controls */}
@@ -345,6 +320,32 @@ export default function Home() {
               </div>
             </div>
 
+            {/* Export Controls */}
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-3">Export</h3>
+              <button
+                onClick={handleDownload}
+                disabled={isDownloading}
+                className="w-full px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center justify-center gap-2 text-sm disabled:bg-gray-400 disabled:cursor-not-allowed"
+              >
+                {isDownloading ? (
+                  <>
+                    <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Downloading...
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    Download
+                  </>
+                )}
+              </button>
+            </div>
 
           </div>
         </div>
