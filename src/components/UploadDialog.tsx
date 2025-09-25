@@ -5,7 +5,7 @@ import { fal } from '@fal-ai/client'
 import { Gallery, type GalleryRef } from './Gallery'
 import { galleryStorage } from '@/utils/galleryStorage'
 import { validateAndResizeImage, formatFileSize, formatDimensions, IMAGE_LIMITS } from '@/utils/imageUtils'
-import { X, Upload, Image as ImageIcon, AlertTriangle } from 'lucide-react'
+import { X, Upload, Image as ImageIcon, AlertTriangle, RotateCcw } from 'lucide-react'
 
 interface ProcessingFile {
   file: File
@@ -250,6 +250,54 @@ export function UploadDialog({ isOpen, onClose, onImageProcessed }: UploadDialog
     setProcessingFiles(prev => prev.filter(f => f.id !== id))
   }
 
+  const retryProcessing = (processingFile: ProcessingFile) => {
+    // Reset the file status to pending and clear any error
+    setProcessingFiles(prev => 
+      prev.map(f => f.id === processingFile.id ? { 
+        ...f, 
+        status: 'pending', 
+        error: undefined,
+        processedUrl: undefined
+      } : f)
+    )
+    
+    // Clear any general error message
+    setError(null)
+    
+    // Automatically start processing
+    processImage(processingFile)
+  }
+
+  const retryAllFailed = async () => {
+    if (!apiKey) {
+      setError('Please configure your API key.')
+      return
+    }
+
+    const failedFiles = processingFiles.filter(f => f.status === 'error')
+    if (failedFiles.length === 0) return
+
+    // Reset all failed files to pending status
+    setProcessingFiles(prev => 
+      prev.map(f => f.status === 'error' ? { 
+        ...f, 
+        status: 'pending', 
+        error: undefined,
+        processedUrl: undefined
+      } : f)
+    )
+
+    // Clear any general error message
+    setError(null)
+
+    // Process failed files one by one
+    for (const file of failedFiles) {
+      await processImage({ ...file, status: 'pending', error: undefined, processedUrl: undefined })
+      // Small delay between requests
+      await new Promise(resolve => setTimeout(resolve, 500))
+    }
+  }
+
   const handleGalleryImageSelect = (imageUrl: string, imageId: string) => {
     setSelectedGalleryImageId(imageId)
     onImageProcessed(imageUrl)
@@ -392,15 +440,27 @@ export function UploadDialog({ isOpen, onClose, onImageProcessed }: UploadDialog
               <div className="mb-4">
                 <div className="flex items-center justify-between mb-2">
                   <h5 className="text-sm font-medium text-gray-700">Processing Queue</h5>
-                  {pendingCount > 0 && (
-                    <button
-                      onClick={processAllImages}
-                      disabled={!apiKey}
-                      className="px-3 py-1 text-xs bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors disabled:bg-gray-400"
-                    >
-                      Process All ({pendingCount})
-                    </button>
-                  )}
+                  <div className="flex gap-2">
+                    {pendingCount > 0 && (
+                      <button
+                        onClick={processAllImages}
+                        disabled={!apiKey}
+                        className="px-3 py-1 text-xs bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors disabled:bg-gray-400"
+                      >
+                        Process All ({pendingCount})
+                      </button>
+                    )}
+                    {errorCount > 0 && (
+                      <button
+                        onClick={retryAllFailed}
+                        disabled={!apiKey}
+                        className="flex items-center gap-1 px-3 py-1 text-xs bg-orange-600 text-white rounded hover:bg-orange-700 transition-colors disabled:bg-gray-400"
+                      >
+                        <RotateCcw size={12} />
+                        Retry Failed ({errorCount})
+                      </button>
+                    )}
+                  </div>
                 </div>
                 
                 <div className="space-y-2 max-h-64 overflow-y-auto">
@@ -461,8 +521,21 @@ export function UploadDialog({ isOpen, onClose, onImageProcessed }: UploadDialog
                           <div className="text-xs text-green-600 font-medium">✓ Completed</div>
                         )}
                         {file.status === 'error' && (
-                          <div className="text-xs text-red-600 font-medium" title={file.error}>
-                            ✗ Error
+                          <div className="flex items-center gap-2">
+                            <div 
+                              className="text-xs text-red-600 font-medium cursor-help" 
+                              title={`Error: ${file.error || 'Unknown error occurred'}`}
+                            >
+                              ✗ Failed
+                            </div>
+                            <button
+                              onClick={() => retryProcessing(file)}
+                              disabled={!apiKey}
+                              className="p-1 bg-orange-600 text-white rounded hover:bg-orange-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                              title={`Retry processing${!apiKey ? ' (API key required)' : ''}`}
+                            >
+                              <RotateCcw size={12} />
+                            </button>
                           </div>
                         )}
                         <button
