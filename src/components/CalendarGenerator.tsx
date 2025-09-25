@@ -11,12 +11,13 @@ interface CalendarGeneratorProps {
   year: number
   backgroundImage?: string | null
   currentViewMonth?: number
+  backgroundZoom?: number
   elementId?: string
 }
 
 
 
-export function CalendarGenerator({ template, fromMonth, toMonth, year, backgroundImage, currentViewMonth = fromMonth, elementId = "calendar-container" }: CalendarGeneratorProps) {
+export function CalendarGenerator({ template, fromMonth, toMonth, year, backgroundImage, currentViewMonth = fromMonth, backgroundZoom = 100, elementId = "calendar-container" }: CalendarGeneratorProps) {
 
   const calendarData = useMemo(() => {
     const date = new Date(year, currentViewMonth, 1)
@@ -116,8 +117,8 @@ export function CalendarGenerator({ template, fromMonth, toMonth, year, backgrou
                 href={backgroundImage || '/default/default_no_color.jpg'}
                 x="-0.07"
                 y="15.78"
-                width="817.82"
-                height="796.41"
+                width={817.82 * (backgroundZoom / 100)}
+                height={796.41 * (backgroundZoom / 100)}
                 preserveAspectRatio="xMidYMid slice"
                 clipPath="url(#sunflower-clip)"
               />
@@ -162,7 +163,7 @@ export function CalendarGenerator({ template, fromMonth, toMonth, year, backgrou
             className="absolute inset-0 rounded-full pointer-events-none"
             style={{
               backgroundImage: backgroundImage ? `url(${backgroundImage})` : 'url(/default/default_no_color.jpg)',
-              backgroundSize: 'cover',
+              backgroundSize: `${backgroundZoom}%`,
               backgroundPosition: 'center',
               backgroundRepeat: 'no-repeat',
               clipPath: 'circle(290px at center)'
@@ -293,7 +294,7 @@ export function CalendarGenerator({ template, fromMonth, toMonth, year, backgrou
         className="grid grid-cols-7 grid-rows-6 relative overflow-hidden flex-1"
         style={{
           backgroundImage: backgroundImage ? `url(${backgroundImage})` : 'url(/default/default_no_color.jpg)',
-          backgroundSize: 'cover',
+          backgroundSize: `${backgroundZoom}%`,
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat'
         }}

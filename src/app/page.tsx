@@ -1,11 +1,13 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { CalendarGenerator } from '@/components/CalendarGenerator'
 import { DownloadModal } from '@/components/DownloadModal'
 import { UploadDialog } from '@/components/UploadDialog'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { Gallery } from '@/components/Gallery'
+import { ChevronLeft, ChevronRight, Image as ImageIcon } from 'lucide-react'
 import { downloadCalendar, captureCalendarAsImage, type CalendarData } from '@/utils/downloadUtils'
+import { galleryStorage } from '@/utils/galleryStorage'
 
 
 
@@ -14,19 +16,86 @@ export default function Home() {
   const [fromMonth, setFromMonth] = useState<number>(new Date().getMonth())
   const [toMonth, setToMonth] = useState<number>(new Date().getMonth())
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear())
-  const [backgroundImage, setBackgroundImage] = useState<string | null>(null)
+  const [monthBackgrounds, setMonthBackgrounds] = useState<Map<string, string>>(new Map())
   const [currentViewMonth, setCurrentViewMonth] = useState<number>(new Date().getMonth())
   const [showDownloadModal, setShowDownloadModal] = useState(false)
   const [showUploadDialog, setShowUploadDialog] = useState(false)
   const [isDownloading, setIsDownloading] = useState(false)
+  const [backgroundZoom, setBackgroundZoom] = useState<number>(100)
+  const [showBackgroundSelector, setShowBackgroundSelector] = useState(false)
   const calendarRef = useRef<HTMLDivElement>(null)
 
+  // Load saved backgrounds on component mount
+  useEffect(() => {
+    const loadSavedBackgrounds = async () => {
+      try {
+        const savedBackgrounds = await galleryStorage.getAllMonthBackgrounds()
+        const backgroundsMap = new Map<string, string>()
+        
+        for (const bg of savedBackgrounds) {
+          const key = `${bg.month}-${bg.year}`
+          // Get the actual image from gallery
+          const images = await galleryStorage.getAllImages()
+          const image = images.find(img => img.id === bg.imageId)
+          if (image) {
+            backgroundsMap.set(key, image.url)
+          }
+        }
+        
+        setMonthBackgrounds(backgroundsMap)
+      } catch (error) {
+        console.error('Failed to load saved backgrounds:', error)
+      }
+    }
+
+    loadSavedBackgrounds()
+  }, [])
+
+  const getCurrentMonthBackground = () => {
+    const key = `${currentViewMonth}-${selectedYear}`
+    return monthBackgrounds.get(key) || null
+  }
+
   const handleBackgroundUpload = (imageUrl: string) => {
-    setBackgroundImage(imageUrl)
+    // Set for current month
+    const key = `${currentViewMonth}-${selectedYear}`
+    setMonthBackgrounds(prev => new Map(prev).set(key, imageUrl))
+    
+    // Save to IndexedDB (we'll need to find the imageId)
+    saveBgToStorage(currentViewMonth, selectedYear, imageUrl)
+  }
+
+  const saveBgToStorage = async (month: number, year: number, imageUrl: string) => {
+    try {
+      const images = await galleryStorage.getAllImages()
+      const image = images.find(img => img.url === imageUrl)
+      if (image) {
+        await galleryStorage.setMonthBackground(month, year, image.id)
+      }
+    } catch (error) {
+      console.error('Failed to save background to storage:', error)
+    }
   }
 
   const handleBackgroundRemove = () => {
-    setBackgroundImage(null)
+    const key = `${currentViewMonth}-${selectedYear}`
+    setMonthBackgrounds(prev => {
+      const next = new Map(prev)
+      next.delete(key)
+      return next
+    })
+    
+    // Remove from IndexedDB
+    galleryStorage.removeMonthBackground(currentViewMonth, selectedYear)
+  }
+
+  const handleMonthBackgroundSelect = (imageUrl: string, imageId: string) => {
+    const key = `${currentViewMonth}-${selectedYear}`
+    setMonthBackgrounds(prev => new Map(prev).set(key, imageUrl))
+    
+    // Save to IndexedDB
+    galleryStorage.setMonthBackground(currentViewMonth, selectedYear, imageId)
+    setShowBackgroundSelector(false)
   }
 
   const handleDownload = () => {
@@ -43,7 +112,7 @@ export default function Home() {
     // Temporarily change to the target month
     setCurrentViewMonth(calendarData.month)
     
-    // Wait for re-render
+    // Wait for re-render to show the correct background for this month
     await new Promise(resolve => setTimeout(resolve, 1000))
     
     try {
@@ -83,7 +152,7 @@ export default function Home() {
           toMonth,
           year: selectedYear,
           template: selectedTemplate,
-          backgroundImage
+          backgroundImage: getCurrentMonthBackground()
         },
         createTemporaryCalendar
       )
@@ -219,7 +288,16 @@ export default function Home() {
                   </svg>
                   Upload & Process
                 </button>
-                {backgroundImage && (
+                
+                <button
+                  onClick={() => setShowBackgroundSelector(true)}
+                  className="w-full px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center justify-center gap-2 text-sm"
+                >
+                  <ImageIcon size={16} />
+                  Select from Gallery
+                </button>
+
+                {getCurrentMonthBackground() && (
                   <button
                     onClick={handleBackgroundRemove}
                     className="w-full px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center gap-2 text-sm"
@@ -232,14 +310,36 @@ export default function Home() {
                 )}
               </div>
               
-              {/* Background Preview */}
+              {/* Background Zoom Control */}
               <div className="mt-3">
-                <p className="text-xs font-medium text-gray-600 mb-2">Current Background:</p>
-                <div className="w-full h-24 border-2 border-black rounded-lg overflow-hidden bg-gray-50">
+                <label className="block text-xs font-medium text-gray-600 mb-2">
+                  Background Zoom: {backgroundZoom}%
+                </label>
+                <input
+                  type="range"
+                  min="50"
+                  max="200"
+                  value={backgroundZoom}
+                  onChange={(e) => setBackgroundZoom(Number(e.target.value))}
+                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+                />
+                <div className="flex justify-between text-xs text-gray-500 mt-1">
+                  <span>50% (Zoom Out)</span>
+                  <span>200% (Zoom In)</span>
+                </div>
+              </div>
+
+              {/* Current Month Info */}
+              <div className="mt-3 p-3 bg-gray-50 rounded-lg">
+                <p className="text-xs font-medium text-gray-700 mb-1">
+                  Current Month: {['January', 'February', 'March', 'April', 'May', 'June',
+                    'July', 'August', 'September', 'October', 'November', 'December'][currentViewMonth]} {selectedYear}
+                </p>
+                <div className="w-full h-20 border border-gray-300 rounded overflow-hidden bg-gray-100">
                   <img 
-                    src={backgroundImage || '/default/default_no_color.jpg'} 
-                    alt="Background preview" 
-                    className="w-full h-full object-cover border border-black"
+                    src={getCurrentMonthBackground() || '/default/default_no_color.jpg'} 
+                    alt="Current month background" 
+                    className="w-full h-full object-cover"
                   />
                 </div>
               </div>
@@ -262,6 +362,19 @@ export default function Home() {
             <ChevronLeft size={24} />
           </button>
 
+          {/* Background Selector Circle */}
+          <button
+            onClick={() => setShowBackgroundSelector(true)}
+            className={`absolute left-4 top-4 z-10 p-3 rounded-full transition-all shadow-lg ${
+              getCurrentMonthBackground()
+                ? 'bg-green-100 hover:bg-green-200 text-green-600 border-2 border-green-300'
+                : 'bg-gray-100 hover:bg-gray-200 text-gray-600 border-2 border-gray-300'
+            }`}
+            title="Change background for this month"
+          >
+            <ImageIcon size={20} />
+          </button>
+
           <div className="w-full h-full flex items-center justify-center p-8 overflow-hidden">
             <div className="w-full max-w-4xl aspect-[5/4] px-16" ref={calendarRef}>
               <CalendarGenerator
@@ -269,8 +382,9 @@ export default function Home() {
                 fromMonth={fromMonth}
                 toMonth={toMonth}
                 year={selectedYear}
-                backgroundImage={backgroundImage}
+                backgroundImage={getCurrentMonthBackground()}
                 currentViewMonth={currentViewMonth}
+                backgroundZoom={backgroundZoom}
                 elementId="main-calendar"
               />
             </div>
@@ -394,6 +508,46 @@ export default function Home() {
         year={selectedYear}
         isDownloading={isDownloading}
       />
+
+      {/* Background Selector Modal */}
+      {showBackgroundSelector && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[80vh] overflow-hidden">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Select Background for {['January', 'February', 'March', 'April', 'May', 'June',
+                    'July', 'August', 'September', 'October', 'November', 'December'][currentViewMonth]} {selectedYear}
+                </h3>
+                <button
+                  onClick={() => setShowBackgroundSelector(false)}
+                  className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div className="p-6 overflow-y-auto max-h-96">
+              <Gallery 
+                onImageSelect={handleMonthBackgroundSelect}
+                selectedImageId={null}
+                showSelectButtons={true}
+                className="h-full"
+              />
+            </div>
+            <div className="p-4 border-t border-gray-200 flex justify-end gap-3">
+              <button
+                onClick={() => setShowBackgroundSelector(false)}
+                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Loading Overlay */}
       {isDownloading && (
