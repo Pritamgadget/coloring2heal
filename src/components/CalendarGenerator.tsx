@@ -302,7 +302,7 @@ export function CalendarGenerator({ template, fromMonth, toMonth, year, backgrou
 
         {calendarData.days.map((day, index) => {
           if (!day) {
-            return <div key={index} className="w-full h-full p-2 relative z-10 border-b border-black"></div>
+            return <div key={index} className="w-full h-full p-2 relative z-10 border-b border-r border-black"></div>
           }
 
           const isToday = day.getDate() === today.getDate() &&
@@ -312,7 +312,7 @@ export function CalendarGenerator({ template, fromMonth, toMonth, year, backgrou
           return (
             <div
               key={day.toISOString()}
-              className={`w-full h-full p-2 transition-colors relative z-10 hover:bg-white/20 border-b border-black ${isToday ? 'font-bold' : ''}`}
+              className={`w-full h-full p-2 transition-colors relative z-10 hover:bg-white/20 border-b border-r border-black ${isToday ? 'font-bold' : ''}`}
             >
               <div className="w-full h-full flex items-center justify-center">
                 <span className="text-lg font-medium text-black">
