@@ -359,7 +359,7 @@ export function CalendarGenerator({ template, fromMonth, toMonth, year, backgrou
                           points="36,3 3,68 68,68"
                           fill="none"
                           stroke="black"
-                          strokeWidth="2"
+                          strokeWidth="1"
                         />
                       </svg>
                       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -377,7 +377,7 @@ export function CalendarGenerator({ template, fromMonth, toMonth, year, backgrou
 
           {/* Decorative border */}
           <div 
-            className="absolute inset-0 pointer-events-none border-4 border-amber-600"
+            className="absolute inset-0 pointer-events-none border-2 border-amber-600"
             style={{
               clipPath: 'polygon(50% 5%, 5% 98%, 95% 98%)'
             }}
