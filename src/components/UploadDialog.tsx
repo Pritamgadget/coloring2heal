@@ -161,7 +161,7 @@ export function UploadDialog({ isOpen, onClose, onImageProcessed }: UploadDialog
                   value={apiKey}
                   onChange={(e) => handleApiKeyChange(e.target.value)}
                   placeholder="Enter your fal.ai API key"
-                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
+                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm text-gray-900 bg-white placeholder-gray-500"
                 />
                 <p className="text-xs text-gray-500 mt-1">
                   Get your API key from{' '}
