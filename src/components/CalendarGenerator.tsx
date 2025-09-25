@@ -359,7 +359,7 @@ export function CalendarGenerator({ template, fromMonth, toMonth, year, backgrou
                           points="36,3 3,68 68,68"
                           fill="none"
                           stroke="black"
-                          strokeWidth="1"
+                          strokeWidth="0.5"
                         />
                       </svg>
                       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -374,6 +374,16 @@ export function CalendarGenerator({ template, fromMonth, toMonth, year, backgrou
             ))}
 
           </div>
+
+          {/* Main triangle outline - thin black line */}
+          <svg className="absolute inset-0 pointer-events-none z-20" viewBox="0 0 600 600">
+            <polygon
+              points="300,25 22,595 578,595"
+              fill="none"
+              stroke="black"
+              strokeWidth="0.5"
+            />
+          </svg>
 
           {/* Decorative border */}
           <div 
@@ -394,7 +404,7 @@ export function CalendarGenerator({ template, fromMonth, toMonth, year, backgrou
                 'bg-black text-white border-black' // fallback
               }`}
               style={{
-                width: '540px', // Matches the triangle base width (90% of 600px container)
+                width: '560px', // Slightly increased width for better appearance
               }}
             >
               <h3 className={`text-xl ${
