@@ -5,7 +5,7 @@ import './globals.css'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Coloring2Heal - Beautiful Calendar Templates',
+  title: 'Coloring2heal - Color Your Mood Calendar',
   description: 'Create stunning calendars with customizable templates and breathtaking designs',
 }
 
